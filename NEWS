@@ -1,0 +1,172 @@
+AmpliconBiSeq 0.1.15
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* designPrimers() function now can handle more than 10 primers returned per sequence.
+
+AmpliconBiSeq 0.1.14
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* methRatio has a new argument called "coverage.th". The amplicons/bases below this value will have NA
+  values in the resulting data frame or GRanges object.
+
+AmpliconBiSeq 0.1.13
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* primer3 and its settings are now included in the package. This means installing 
+  AmpliconBiSeq will automatically install primer3 exectuables and default settings
+  for linux 64 bit systems.
+
+AmpliconBiSeq 0.1.12
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* Bug in designPrimers() function is fixed. The bug occured when there were some
+  target locations that had no primer returned. Now the function returns a value
+  even if some targets do not have any primers.
+
+AmpliconBiSeq 0.1.11
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* Bug in AmpliconViews function is fixed. The bug occured rarely presumebly for only
+  for some of the very low coverage amplicons, stemming from internal reduceMat() and
+  findElbow() functions used in SVD analysis.
+
+
+AmpliconBiSeq 0.1.10
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* Bug in designPrimers was fixed. Design primers was counting number of Cs
+  that overlap with the right primer incorrectly. Now that should be fixed.
+
+AmpliconBiSeq 0.1.9
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* spikeCheck() function does not call par() when plotting methylation for
+  multiple spike-ins. The user has to call par
+
+
+AmpliconBiSeq 0.1.8
+--------------
+
+NEW FUNCTIONS AND FEATURES
+
+* New function designPrimers() can design primers for bisulfite sequencing experiments
+
+* New function filterPrimers() can filter designed primers based on cutoffs
+
+* New function primers2ranges() can convert a list of primers to GRanges or data frame
+  containing amplicon regions and primer information
+
+AmpliconBiSeq 0.1.7
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* AmpliconViews() function bug that causes the function to explode memory usage
+ and run-time when there is only one CpG covered is now fixed. Error was caused
+ by one column call matrix was transposed during subsetting due to drop=TRUE argument
+ which is on by default.
+
+* methRatio() functions works without a problem when there are no tags for amplicons 
+  and simple.tags=TRUE (which is default)
+
+
+
+AmpliconBiSeq 0.1.6
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* AmpliconViews() function bug that causes the function to terminate when there is
+ only one CpG covered is now fixed. Error was because of metaProfile function that
+ was applied to a one column matrix.
+
+
+AmpliconBiSeq 0.1.5
+--------------
+
+NEW FUNCTIONS AND FEATURES
+
+* plotAmpliconView() function has a new option called "meta.exp" which is used
+  to decide how many meta-profiles will be plotted. It controls what percentage
+  of the dataset will be explained by plotted meta-profiles
+
+IMPROVEMENTS AND BUG FIXES
+
+* 
+
+AmpliconBiSeq 0.1.4
+--------------
+
+NEW FUNCTIONS AND FEATURES
+
+* getSimilarity() function returns a similarity matrix for CpGs in the amplicon
+  it implements various measures of similarity
+
+IMPROVEMENTS AND BUG FIXES
+
+* plotAmpliconView() function can now plot multiple plots using
+  grid.layout(). Prior to this version, it was not possible to 
+  plot ampliconViews side by side using grid.layout() function. Now it is.
+
+* AmpliconViews() function now removes the bases from the call.matrix
+  that has no coverage as a result of filtering such conversion filtering.
+
+
+AmpliconBiSeq 0.1.3
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* plotAmpliconView() function can now plot multiple plots using
+  grid.layout(). Prior to this version, it was not possible to 
+  plot ampliconViews side by side using grid.layout() function. Now it is.
+
+* AmpliconViews() function now removes the bases from the call.matrix
+  that has no coverage as a result of filtering such conversion filtering.
+
+
+AmpliconBiSeq 0.1.2
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* AmpliconViews() function argument call.matrix now working correctly
+
+* plotAmpliconView() function argument 'h.panel' was complaining about it is default
+  value NULL. Now that is fixed.
+
+* Setting AmpliconViews() verbose=TRUE will now also print sample name for the
+  amplicon that is processed at that moment.
+
+* AmpliconViews function was not returning NA data slots when amplicon did not
+ have any coverage resulting in in correct number of amplicons per sample. Now 
+ this issue is fixed
+
+
+
+
+AmpliconBiSeq 0.1.1
+--------------
+
+IMPROVEMENTS AND BUG FIXES
+
+* plotAmpliconView() function has two new arguments 'h.heat' and 'h.panel' which describes the relative
+  heights of the panels in the plot. 'h.panel' replaces 'p.sizes'. 'h.panel' does not 
+  control the relative height of the similarity heatmap, that is controlled by a seperate 
+  option 'h.heat'.
+
+* function help for plotAmpliconViews() is enhanced.

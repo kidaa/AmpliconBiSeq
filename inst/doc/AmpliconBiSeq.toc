@@ -1,0 +1,14 @@
+\contentsline {section}{\numberline {1}Introduction}{1}
+\contentsline {section}{\numberline {2}Basics}{1}
+\contentsline {subsection}{\numberline {2.1}Aligning reads}{1}
+\contentsline {subsection}{\numberline {2.2}Conversion quality check by spike-ins}{2}
+\contentsline {subsection}{\numberline {2.3}Extracting amplicon based methylation from alignments}{3}
+\contentsline {subsection}{\numberline {2.4}Visualizing Amplicons}{3}
+\contentsline {section}{\numberline {3}Calculation of meta-methylation profiles}{4}
+\contentsline {section}{\numberline {4}Calculation of similarity between CpG pairs from the same amplicon}{7}
+\contentsline {section}{\numberline {5}Convenience functions}{7}
+\contentsline {subsection}{\numberline {5.1}Getting methylation ratio for all bases covered in experiments}{7}
+\contentsline {subsection}{\numberline {5.2}Subsetting AmpliconViews}{9}
+\contentsline {subsection}{\numberline {5.3}Getting amplicon and sample information}{9}
+\contentsline {subsection}{\numberline {5.4}Other functions}{9}
+\contentsline {section}{\numberline {6}Future Work}{9}

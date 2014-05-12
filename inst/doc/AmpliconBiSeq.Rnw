@@ -1,0 +1,287 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{AmpliconBiSeq: User Guide}
+%\VignettePackage{AmpliconBiSeq}
+% !Rnw weave = knitr
+\documentclass{article}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+
+
+\title{ AmpliconBiSeq: User Guide}
+
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+library(knitr)
+## set global chunk options
+opts_chunk$set(fig.path='figure/manual-', cache.path='cache/manual-',
+               fig.align='center', fig.show='hold', par=TRUE)
+               #tidy.opts=list(keep.blank.line=FALSE, width.cutoff=50))
+## I use = but I can replace it with <-; set code/output width to be 68
+options(replace.assign=TRUE, width=50)
+## tune details of base graphics (http://yihui.name/knitr/hooks)
+#knit_hooks$set(par=function(before, options, envir){
+#if (before && options$fig.show!='none') par(mar=c(4,4,.1,.1),cex.lab=.95,cex.axis=.9,mgp=c(2,.7,0),tcl=-.3)
+#})
+
+@
+\author{Altuna Akalin\\ \texttt{altuna.akalin@fmi.ch}}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+AmpliconBiSeq is an R package for visualization and analysis of amplicon bisulfite
+sequencing experiments using high-throughput sequencing techniques. This is a targeted
+version of HT bisulfite sequencing. Amplicon bisulfite sequencing provides very deep 
+coverage for short regions of the genome.
+ 
+
+\section{Basics}
+The entry point to an AmpliconBiSeq analysis is typically a set of aligned reads. These aligned 
+reads will be processed by the package and an object that contains a summary for each amplicon of each sample
+will be produced. This basic object can be visualized with functions provided in the package and parts of it 
+can be extracted for further analysis.
+
+\subsection{Aligning reads}
+Alignment of reads should be done by \texttt{QuasR} package. The entry point to AmpliconBiSeq
+analysis will be a \texttt{qProject} object obtained from \texttt{QuasR}. Below is an example code chunk
+that will achieve such alignment using \texttt{QuasR} package.
+<<qAling1, echo=TRUE,eval=TRUE,tidy=FALSE,message=FALSE>>=
+library(QuasR)
+# make clusters, needed to run in parallel
+cluObj=makeCluster(8)
+
+#change this to desired location of your alignments 
+my.alignmentsDir="/work2/gschub/altuna/projects/AmpliconTimeCourse_cre_Feldmann/aln"
+
+#assuming text files are in your working directory
+proj=
+  qAlign(
+  sampleFile="~/w2/projects/AmpliconTimeCourse_cre_Feldmann/readFiles.v0.txt", 
+  genome="BSgenome.Mmusculus.UCSC.mm9", 
+  auxiliaryFile="/work2/gschub/Juliane/scripts/Altuna/auxFile.forQuasR.txt", 
+  aligner="Rbowtie", 
+  paired="fr", 
+  bisulfite="undir", 
+  projectName="AmpliconBiSeq", 
+  alignmentsDir=my.alignmentsDir, 
+  clObj=cluObj
+  )
+
+@
+\texttt{sampleFile} and \texttt{auxiliaryFile} are tab separated text files that
+contain the sample names and read locations. For the auxiliaryFile, it contains
+locations of spike-in sequences that will also be aligned against. See \texttt{?qAlign}
+for more information on \texttt{sampleFile} and \texttt{auxilaryFile} requirements.
+
+
+\subsection{Conversion quality check by spike-ins}
+The \texttt{qProject} object that contains the aligned reads can also contain alignments for spike in sequences.
+These sequences will have predefined methylation properties and bisulfite conversion efficiency can be interrogated
+using those. The \texttt{spikeCheck}function provides methylation statistics for spike-ins. It plots a 
+histogram or set of histograms from spike-in experiments which are helpful
+to deduce conversion efficiency of the experiment.
+
+<<spikeCheck1,eval=TRUE,out.width='.9\\linewidth',fig.height=6>>=
+library(AmpliconBiSeq)
+spikeCheck(proj,auxName="T7",sampleName="mock4")
+@
+
+
+\subsection{Extracting amplicon based methylation from alignments}
+The \texttt{AmpliconViews} function extracts the amplicon related information from
+the alignment and calculates meta-methylation profiles and similarity between CpGs, 
+as well as average methylation values and coverage per base. The function returns
+an \texttt{AmpliconViews} object. The object holds necessary information for further
+analysis and visualization.
+
+<<AmpliconViews1,eval=FALSE,out.width='.9\\linewidth'>>=
+
+ampliconLoc=GRanges(seqnames=c("chr18","chr18"),
+                    ranges=IRanges(c(69674375,69674975),
+                                   c(69674775,69675375))
+                                   )
+
+x=AmpliconViews(proj,range=ampliconLoc,
+                tag=c("amp1","amp2"),
+                sampleNames=c("mock4"),
+                call.matrix=FALSE,verbose=TRUE)
+
+x
+@
+
+\subsection{Visualizing Amplicons}
+Amplicons can be visualized with \texttt{plotAmpliconView} function. The function
+can visualize one amplicon at a time, so it is important that users select which 
+amplicon they want to visualize before hand. This can be done with \texttt{getAmplicon} function.
+An example of this is shown below.
+<<plotAmp,eval=TRUE,out.width='.9\\linewidth',fig.height=8>>=
+data(ampViewEx) # load example data
+myAmp=getAmplicon(ampViewEx,"mock4","chr18_69674375_69674775")
+plotAmpliconView(myAmp)
+@
+
+\section{Calculation of meta-methylation profiles}
+An amplicon can be represented as a binary methylation
+call matrix where each row is a read fragment and the columns are CpGs.
+Meta-methylation profiles can be thought of as patterns that explain a sub-section of 
+methylation call matrix from an amplicon.  This matrix can be
+analyzed to get methylation profiles that explains most of the individual profiles. This
+way, huge matrices can be efficiently visualized and summarized, and this could also be
+used as a metric for sample heterogeneity.
+Meta-methylation profiles are calculated 
+using two rounds of singular-value decomposition (different way of doing PCA) and clustering. 
+First round of SVD removes the noise
+using a user defined cutoff or an 'automatic' cutoff. The cutoff designates what percentage
+of variation is considered as noise. The first round will basically remove principal components
+that does not explain much of the variation. The second round of SVD will be run on noise
+filtered matrix of methylation calls, and rows of the matrix will be clustered based
+on the top contributing components (the components that explain most variation),
+then for each cluster a meta-methylation profile is calculated by taking the average of 
+methylation scores and binarizing them. The size of the cluster can be used
+to calculate what percentage of the data has driven the given meta-methylation profile.
+\\ 
+In the example below, we will simulate a methylation call matrix which has three methylation
+profiles and some noise. Here are the methylation profiles:
+<<metaImplant,eval=TRUE,echo=FALSE,out.width='.9\\linewidth',fig.height=4>>=
+x=(c(1,1,1 ,1,-1,-1,-1, 1, 1, 1,1) )
+y=(c(1,1,1,1 ,1, 1,-1,1,1,1,1) )
+z=(c(1,1,1,1 ,1, 1,1,1,1,1,1))
+mat=rbind(x,y,z)
+image(t(mat[3:1,]),axes=FALSE,col=c("gray","red"),
+      main="Profiles to be implanted to the simulated data set")
+abline(v=seq(0.05,by=0.1,length=11))
+abline(h=seq(0.25,by=0.5,length=3))
+axis(side=2,at=seq(0.25,by=0.5,length=3)-0.25,
+     labels=c("Profile1","Profile2","Profile3"),las=2 )
+axis(side=1,at=seq(0.05,by=0.1,length=11)-0.05,
+     labels=paste("CpG",1:11),las=2 )
+par(xpd=TRUE)
+legend(x=-0.03,y=1.5,fil=c("red","gray"),legend=c("methylated","unmethylated"),
+       horiz=TRUE,bty="n")
+par(xpd=FALSE)
+@
+
+Now, we will construct a simulated methylation call matrix and add some noise. "Profile1" will
+be replicated 500 times, "Profile2" will be replicated 300 times and "Profile3" will
+be replicated 200 times. Then we will add 5 \% noise which will represent methylation
+call error or other noise.
+
+<<MetaGenerate,eval=TRUE,echo=FALSE,out.width='.9\\linewidth',fig.height=6>>=
+x=(c(1,1,1 ,1,-1,-1,-1, 1, 1, 1,1) )
+y=(c(1,1,1,1 ,1, 1,-1,1,1,1,1) )
+z=(c(1,1,1,1 ,1, 1,1,1,1,1,1))
+mat=rbind( matrix(rep(x,200),ncol=length(x),byrow=TRUE),
+           matrix(rep(y,300),ncol=length(y),byrow=TRUE),
+           matrix(rep(z,500),ncol=length(y),byrow=TRUE))
+
+# add noise
+mat2=mat
+p=sample(1:length(mat),round(length(mat)*0.05),replace=FALSE)
+mat[ p[p %in% which( mat == -1)] ]=1
+mat[ p[p %in% which( mat ==  1)] ]=-1
+
+par(mfrow=c(1,2))
+image(t(mat2[nrow(mat2):1,]),col=c("gray","red"),axes=FALSE,
+      main="methylation call matrix\nbefore noise addition")
+
+image(t(mat[nrow(mat):1,]),col=c("gray","red"),axes=FALSE,
+      main="methylation call matrix\nafter noise addition")
+
+@
+Here are the returned meta-methylation profiles after analyzing the simulated
+call matrix with the method explained above. The method also orders the meta-methylation
+profiles based on how much of the data set they explain. In this example,
+"Meta1" returned as most important since it, explains 44\% of the dataset. The method
+returned all the implanted profiles correctly and ordered them correctly based on
+how much of the data they can explain.
+
+<<metaReveal,eval=TRUE,echo=FALSE,out.width='.9\\linewidth',fig.height=4>>=
+
+x=AmpliconBiSeq:::metaProfile(mat,pca.var='auto',noise.tol='auto',meta.exp=80,
+            example.size=10)
+mat=x$metas[1:3,]
+
+image(t(mat[3:1,]),axes=FALSE,col=c("gray","red"),main="returned meta-methylation profiles")
+abline(v=seq(0.05,by=0.1,length=11))
+abline(h=seq(0.25,by=0.5,length=3))
+axis(side=2,at=seq(0.25,by=0.5,length=3)-0.25,
+     labels=rev(c("Meta1","Meta2","Meta3")),las=2 )
+axis(side=4,at=seq(0.25,by=0.5,length=3)-0.25,
+     labels=paste(round(x$meta.exp[3:1]),"%",sep=""),las=2 )
+
+axis(side=1,at=seq(0.05,by=0.1,length=11)-0.05,
+     labels=paste("CpG",1:11),las=2 )
+par(xpd=TRUE)
+legend(x=-0.03,y=1.5,fil=c("red","gray"),legend=c("methylated","unmethylated"),
+       horiz=TRUE,bty="n")
+par(xpd=FALSE)
+@
+
+
+\section{Calculation of similarity between CpG pairs from the same amplicon}
+For a given amplicon, a similarity between a pair of CpGs can be calculated as
+simple Jaccard similarity, which is number of common methylation calls over all
+methylation calls for a pair of CpGs.
+
+\begin{equation}\label{Jaccard}
+ Jaccard Similarity =\frac{M_1 \cap M_2}{M_1 \cup M_2}
+\end{equation}
+
+In equation (\ref{Jaccard}), $M_1$ $\cap$ $M_2$ is the number of identical 
+methylation calls for $CpG_1$ and $CpG_2$, and $M_1$ $\cup$ $M_2$ is the number
+of methylation calls that are present both CpGs. For example, the Jaccard similarty between
+these two binary vectors, A=[1,1,1,0,0] and B=[1,1,0,0,0] is 0.8 since 4 out 5 elements are
+identical.
+\\ 
+
+There are two other experimental similarity measures calculated. One is a method suggested by Landan et. al  (doi:10.1038/ng.2442, Nature Genetics).
+The other one is still the Jaccard similarity but calculated after removing data 
+points where both CpGs are unmethylated. 
+
+\section{Convenience functions}
+These functions help query and extract parts of AmpliconViews object, so those parts can
+be utilized in further analysis.
+
+\subsection{Getting methylation ratio for all bases covered in experiments}
+\texttt{methRatio} function can be used to get a table of methylation ratios and
+coverage per base or per amplicon.
+<<methRatio,eval=TRUE>>=
+data(ampViewEx)
+methRatio(ampViewEx)
+@
+\subsection{Subsetting AmpliconViews}
+\texttt{getAmplicon} is the function for subsetting an AmpliconViews object.
+<<getAmpl,eval=TRUE>>=
+data(ampViewEx)
+myAmp=getAmplicon(ampViewEx,sampleNames="mock4",
+                  ampliconNames="chr18_69674375_69674775")
+@
+
+\subsection{Getting amplicon and sample information}
+\texttt{getAmpliconNames},\texttt{getSampleNames} are the functions that retrieve
+amplicon names and sample names. \texttt{getAmpliconRanges} returns \texttt{GRanges}
+object that contains the locations of the amplicons.
+<<ampInfo,eval=TRUE>>=
+data(ampViewEx)
+x=getAmpliconNames(ampViewEx)
+head(x)
+
+getSampleNames(ampViewEx)
+@
+\subsection{Other functions}
+There are a number of other convenience functions to access particular parts of the
+\texttt{AmpliconViews} object. \texttt{getAvMeth} and \texttt{getCoverage} gets
+methylation per base and coverage per base for a specific amplicon. \texttt{getExampleMethMat}
+returns a sample of methylation call matrix (if there was enough coverage) on the amplicon.
+\texttt{getMethMat} returns full methylation call matrix for a given amplicon, if
+it was extracted during object creation.
+
+\section{Future Work}
+The package will support visualization of extra tracks \texttt{plotAmpliconView} function.
+
+
+
+\end{document}

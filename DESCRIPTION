@@ -1,0 +1,18 @@
+Package: AmpliconBiSeq
+Type: Package
+Title: analyzing amplicon bisulfite sequencing data
+Version: 0.1.15
+Author: altuna.akalin@gmail.com
+Maintainer: Altunislav Akalinski <altuna.akalin@gmail.com>
+Description: Takes the aligned reads from amplicon bisulfite sequencing experiments,
+              and visualizes the amplicons.
+License: Licensed by hobbits
+Depends: R (>= 3.0), methods, grid
+Imports: QuasR (>= 1.1.4), data.table (>= 1.8.6), GenomicRanges (>=
+        1.8.6), Gviz, Rsamtools
+Suggests: knitr
+Collate: 'AmpliconViews_class.R' 'AmpliconViews_function.R'
+        'plotAmpliconView.R' 'spikeCheck.R' 'designPrimers.R'
+LazyLoad: yes
+VignetteBuilder: knitr
+Packaged: 2014-04-18 15:29:13 UTC; akalaltu
