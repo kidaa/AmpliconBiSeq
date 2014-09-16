@@ -340,7 +340,8 @@ filterPrimers<-function(primers,minConPrimer=1,minCGonAmp=2){
 #'  gr.pr=primers2ranges(bisPrimers)
 #'          
 #' @seealso \code{\link{filterPrimers}}, \code{\link{designPrimers}}
-#'        
+#'
+#' @importFrom IRanges IRanges                
 #' @export
 #' @docType methods
 primers2ranges<-function(primers,as.data.frame=FALSE){
