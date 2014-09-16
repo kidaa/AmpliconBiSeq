@@ -14,7 +14,7 @@ biocLite(c("Gviz","QuasR","Rsamtools"))
 
 # install from github
 library(devtools)
-install_github("methylKit", username = "BIMSBbioinfo",build_vignettes=FALSE)
+install_github("AmpliconBiSeq", username = "BIMSBbioinfo",build_vignettes=FALSE)
 ```
 
 
