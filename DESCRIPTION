@@ -1,7 +1,7 @@
 Package: AmpliconBiSeq
 Type: Package
 Title: analyzing amplicon bisulfite sequencing data
-Version: 0.1.16
+Version: 0.1.17
 Author: altuna.akalin@gmail.com
 Maintainer: Altunislav Akalinski <altuna.akalin@gmail.com>
 Description: Takes the aligned reads from amplicon bisulfite sequencing experiments,
